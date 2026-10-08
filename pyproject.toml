@@ -1,0 +1,134 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dynamic-ontology-graphrag"
+version = "0.1.0"
+description = "A modular, domain-agnostic GraphRAG framework with dynamic T-Box ontology construction, multi-strategy extraction, evidence-driven cascade verification, and hierarchical graph beam search retrieval."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "DynamicOntology-GraphRAG Contributors" }]
+keywords = ["graphrag", "rag", "ontology", "knowledge-graph", "llm", "retrieval"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# ---------- Runtime ----------
+dependencies = [
+    # --- Data contracts ---
+    "pydantic>=2.6,<3.0",
+
+    # --- Graph core ---
+    "networkx>=3.2,<4.0",
+    "python-louvain>=0.16",       # Louvain community detection
+    "leidenalg>=0.10",            # Leiden community detection (optional but listed)
+
+    # --- Numerics / ML ---
+    "numpy>=1.26,<3.0",
+    "scikit-learn>=1.4,<2.0",
+    "scipy>=1.11,<2.0",
+
+    # --- LLM / embeddings ---
+    "openai>=1.30,<3.0",
+    "httpx>=0.27",                # for the Ollama HTTP backend
+    "tiktoken>=0.7",
+    "tenacity>=8.2",              # retries for LLM calls
+
+    # --- Text utilities ---
+    "tqdm>=4.66",
+    "orjson>=3.10",               # fast JSON for corpus I/O
+    "PyYAML>=6.0",
+    "regex>=2024.5",
+]
+
+[project.optional-dependencies]
+# Lightweight local sentence-transformers embeddings
+embeddings-local = [
+    "sentence-transformers>=2.7",
+    "torch>=2.2",
+]
+# spaCy-based Open IE
+openie = [
+    "spacy>=3.7",
+]
+# Async HTTP for retrieval serving
+serve = [
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.30",
+]
+# Development / docs
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "pytest-asyncio>=0.23",
+    "mypy>=1.10",
+    "ruff>=0.5",
+    "black>=24.4",
+    "isort>=5.13",
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+]
+all = [
+    "dynamic-ontology-graphrag[embeddings-local,openie,serve,dev]",
+]
+
+[project.urls]
+Homepage = "https://github.com/leidingfei2/DynamicOntology-GraphRAG"
+Repository = "https://github.com/leidingfei2/DynamicOntology-GraphRAG.git"
+Issues = "https://github.com/leidingfei2/DynamicOntology-GraphRAG/issues"
+
+# No [project.scripts] yet - see examples/demo.py for the runnable entry.
+
+[tool.setuptools]
+packages = [
+    "core",
+    "core.ontology",
+    "core.extraction",
+    "core.verification",
+    "core.retrieval",
+    "core.graph",
+    "core.llm",
+    "core.utils",
+    "connectors",
+    "retriever",
+]
+
+[tool.setuptools.package-data]
+core = ["py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "C4", "RET", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["networkx.*", "community.*", "leidenalg.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q --strict-markers"
+testpaths = ["tests"]
+markers = [
+    "unit: pure unit tests, no I/O",
+    "integration: hits disk / network",
+    "slow: long-running tests",
+]

@@ -1,0 +1,28 @@
+# Edge stack: DynamicOntology-GraphRAG + Ollama on one device.
+#
+#   docker compose -f docker-compose.edge.yml up -d
+#
+# Pull models once (they persist in the named volume):
+#   docker compose -f docker-compose.edge.yml exec ollama ollama pull qwen2.5:7b-instruct
+#   docker compose -f docker-compose.edge.yml exec ollama ollama pull nomic-embed-text
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
+    # On NPU-less boards this runs on CPU; on Jetson/RK with runtime
+    # support, add the matching device mappings here.
+
+  dograph:
+    image: dograph:edge
+    build: .            # `docker compose build` produces dograph:edge
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+volumes:
+  ollama:

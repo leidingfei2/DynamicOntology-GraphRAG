@@ -1,0 +1,60 @@
+# Default configuration for DynamicOntology-GraphRAG.
+# All numeric thresholds and LLM model names are centralised here so they can
+# be overridden per-experiment without code changes.
+
+llm:
+  provider: "openai"          # one of: openai | azure | local
+  model: "gpt-4o-mini"
+  temperature: 0.0
+  max_tokens: 2048
+  request_timeout_s: 60
+  max_retries: 3
+
+embeddings:
+  provider: "openai"          # openai | local | none
+  model: "text-embedding-3-small"
+  batch_size: 64
+  cache_dir: "data/cache/embeddings"
+
+ontology:
+  # T-Box auto-generation
+  max_classes: 200
+  max_relations: 300
+  min_class_support: 3         # min documents a class must appear in
+  min_relation_support: 3
+  prompt_template: "prompts/ontology_generation.txt"
+
+extraction:
+  strategies:
+    - "tot"
+    - "open_ie"
+    - "loose"
+  top_k_per_strategy: 50
+  merge_overlap_threshold: 0.7
+  prompt_dir: "prompts/extraction"
+
+verification:
+  # Three-tier cascade
+  tier1_syntactic:
+    min_evidence_chars: 5
+    reject_self_loops: true
+  tier2_semantic:
+    require_typed_entities: true
+    reject_out_of_schema: true
+  tier3_evidential:
+    E_B_min: 0.55              # believability threshold
+    E_C_min: 0.30              # corroboration threshold
+    combined_min: 0.45
+    max_supporting_spans: 5
+
+retrieval:
+  # Hierarchical community clustering
+  community_algorithm: "leiden"
+  hierarchy_levels: 3          # level 0 = finest, 2 = coarsest
+  min_community_size: 3
+  # Graph Beam Search
+  beam_width: 8
+  max_hops: 3
+  community_top_k: 5
+  entity_top_k: 20
+  triple_top_k: 20
